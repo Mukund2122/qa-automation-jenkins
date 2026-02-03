@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // This pulls your code from GitHub to the Jenkins server
+                checkout scm
+            }
+        }
+
+        stage('Environment Setup') {
+            steps {
+                echo 'Installing Node.js dependencies...'
+                sh 'npm install'
+                echo 'Installing Playwright browsers...'
+                sh 'npx playwright install --with-deps'
+            }
+        }
+
+        stage('Automation Execution') {
+            steps {
+                echo 'Running Playwright Tests...'
+                // Using --reporter=list for clean Jenkins console output
+                sh 'npx playwright test --reporter=list'
+            }
+        }
+
+        stage('Reporting') {
+            steps {
+                echo 'Archiving test results...'
+                // This keeps the HTML report available in the Jenkins UI
+                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution finished.'
+        }
+    }
+}
